@@ -12,15 +12,21 @@
     <h2>Регистрация</h2>
     <form method="post">
         {% csrf_token %}
+        
+        {{ form.non_field_errors }}
+        
         <div class="name-fields">
             <div>{{ form.name.label_tag }} {{ form.name }}</div>
             <div>{{ form.surname.label_tag }} {{ form.surname }}</div>
         </div>
         {{ form.email.label_tag }} {{ form.email }}
-        {{ form.password.label_tag }} {{ form.password }}
+        {{ form.password1.label_tag }} {{ form.password1 }}
+        {{ form.password2.label_tag }} {{ form.password2 }}
+        
         {% for error in form.errors.values %}
-        <p style="color: red;">{{error}}</p>
+        <p style="color: red;">{{ error }}</p>
         {% endfor %}
+        
         <button type="submit">Зарегистрироваться</button>
     </form>
     <p class="auth-link">Уже есть аккаунт? <a href="{% url 'users:login' %}">Войти</a></p>
