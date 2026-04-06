@@ -1,3 +1,6 @@
+import json
+from http import HTTPStatus
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
@@ -5,10 +8,20 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
-import json
 
 from .models import User, Skill
 from .forms import RegisterForm, LoginForm, ProfileEditForm, CustomPasswordChangeForm
+
+# View constants
+USERS_PER_PAGE = 12
+SKILLS_AUTOCOMPLETE_LIMIT = 10
+
+
+def _get_paginated_queryset(queryset, per_page, request):
+    """Helper function for pagination."""
+    paginator = Paginator(queryset, per_page)
+    page_number = request.GET.get('page')
+    return paginator.get_page(page_number)
 
 
 def register_view(request):
@@ -67,9 +80,7 @@ def participants_view(request):
     if active_skill:
         users = users.filter(skills__name=active_skill)
     
-    paginator = Paginator(users, 12)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    page_obj = _get_paginated_queryset(users, USERS_PER_PAGE, request)
     
     context = {
         'participants': page_obj,
@@ -115,7 +126,7 @@ def skills_autocomplete(request):
     """Skills autocomplete for user skills (Variant 2)."""
     query = request.GET.get('q', '')
     if query:
-        skills = Skill.objects.filter(name__icontains=query).order_by('name')[:10]
+        skills = Skill.objects.filter(name__icontains=query).order_by('name')[:SKILLS_AUTOCOMPLETE_LIMIT]
     else:
         skills = Skill.objects.none()
     
@@ -128,12 +139,12 @@ def skills_autocomplete(request):
 def add_skill(request, user_id):
     """Add skill to user (Variant 2)."""
     if request.user.id != user_id:
-        return JsonResponse({'error': 'Permission denied'}, status=403)
+        return JsonResponse({'error': 'Permission denied'}, status=HTTPStatus.FORBIDDEN)
     
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        return JsonResponse({'error': 'Invalid JSON'}, status=HTTPStatus.BAD_REQUEST)
     
     skill_id = data.get('skill_id')
     skill_name = data.get('name')
@@ -146,10 +157,10 @@ def add_skill(request, user_id):
     elif skill_name:
         skill, created = Skill.objects.get_or_create(name=skill_name)
     else:
-        return JsonResponse({'error': 'skill_id or name required'}, status=400)
+        return JsonResponse({'error': 'skill_id or name required'}, status=HTTPStatus.BAD_REQUEST)
     
     added = False
-    if skill not in user.skills.all():
+    if not user.skills.filter(id=skill.id).exists():
         user.skills.add(skill)
         added = True
     
@@ -166,12 +177,12 @@ def add_skill(request, user_id):
 def remove_skill(request, user_id, skill_id):
     """Remove skill from user (Variant 2)."""
     if request.user.id != user_id:
-        return JsonResponse({'error': 'Permission denied'}, status=403)
+        return JsonResponse({'error': 'Permission denied'}, status=HTTPStatus.FORBIDDEN)
     
     user = get_object_or_404(User, pk=user_id)
     skill = get_object_or_404(Skill, pk=skill_id)
     
-    if skill in user.skills.all():
+    if user.skills.filter(id=skill.id).exists():
         user.skills.remove(skill)
     
     return JsonResponse({'status': 'ok'})

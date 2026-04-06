@@ -35,6 +35,5 @@ class Project(models.Model):
     def save(self, *args, **kwargs):
         is_new = self.pk is None
         super().save(*args, **kwargs)
-        # Add owner as participant on creation
-        if is_new and self.owner not in self.participants.all():
+        if is_new and not self.participants.filter(id=self.owner.id).exists():
             self.participants.add(self.owner)
