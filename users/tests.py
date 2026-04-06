@@ -11,6 +11,39 @@ User = get_user_model()
 # Common test data constants
 TEST_PASSWORD = 'testpass123'
 TEST_SURNAME = 'User'
+TEST_ADMIN_PASSWORD = 'adminpass123'
+TEST_WRONG_PASSWORD = 'wrongpassword'
+
+# User test data - emails
+USER_TEST_EMAIL = 'test@example.com'
+USER_TEST_NAME = 'Test'
+
+USER_ADMIN_EMAIL = 'admin@example.com'
+USER_ADMIN_NAME = 'Admin'
+
+USER_STR_EMAIL = 'str@example.com'
+USER_STR_NAME = 'John'
+USER_STR_SURNAME = 'Doe'
+
+USER_SKILLS_EMAIL = 'skills@example.com'
+USER_SKILLS_NAME = 'Skill'
+
+USER_REMOVE_EMAIL = 'remove@example.com'
+USER_REMOVE_NAME = 'Remove'
+
+USER_REGISTER_EMAIL = 'test@example.com'
+USER_REGISTER_NAME = 'Test'
+
+USER_LOGIN_EMAIL = 'login@example.com'
+USER_LOGIN_NAME = 'Login'
+
+USER_PARTICIPANTS_1_EMAIL = 'user1@example.com'
+USER_PARTICIPANTS_1_NAME = 'User'
+USER_PARTICIPANTS_1_SURNAME = 'One'
+
+USER_PARTICIPANTS_2_EMAIL = 'user2@example.com'
+USER_PARTICIPANTS_2_NAME = 'User'
+USER_PARTICIPANTS_2_SURNAME = 'Two'
 
 # Skill test data
 SKILL_PYTHON = 'Python'
@@ -47,13 +80,13 @@ class UserModelTest(TestCase):
     def test_create_user(self):
         """Test creating a user with email."""
         user = User.objects.create_user(
-            email='test@example.com',
-            name='Test',
+            email=USER_TEST_EMAIL,
+            name=USER_TEST_NAME,
             surname=TEST_SURNAME,
             password=TEST_PASSWORD
         )
-        self.assertEqual(user.email, 'test@example.com')
-        self.assertEqual(user.name, 'Test')
+        self.assertEqual(user.email, USER_TEST_EMAIL)
+        self.assertEqual(user.name, USER_TEST_NAME)
         self.assertEqual(user.surname, TEST_SURNAME)
         self.assertTrue(user.is_active)
         self.assertFalse(user.is_staff)
@@ -62,12 +95,12 @@ class UserModelTest(TestCase):
     def test_create_superuser(self):
         """Test creating a superuser."""
         user = User.objects.create_superuser(
-            email='admin@example.com',
-            name='Admin',
+            email=USER_ADMIN_EMAIL,
+            name=USER_ADMIN_NAME,
             surname=TEST_SURNAME,
-            password='adminpass123'
+            password=TEST_ADMIN_PASSWORD
         )
-        self.assertEqual(user.email, 'admin@example.com')
+        self.assertEqual(user.email, USER_ADMIN_EMAIL)
         self.assertTrue(user.is_active)
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)
@@ -75,12 +108,12 @@ class UserModelTest(TestCase):
     def test_user_str_representation(self):
         """Test user string representation."""
         user = User.objects.create_user(
-            email='str@example.com',
-            name='John',
-            surname='Doe',
+            email=USER_STR_EMAIL,
+            name=USER_STR_NAME,
+            surname=USER_STR_SURNAME,
             password=TEST_PASSWORD
         )
-        self.assertEqual(str(user), 'John Doe')
+        self.assertEqual(str(user), f'{USER_STR_NAME} {USER_STR_SURNAME}')
 
 
 class SkillModelTest(TestCase):
@@ -114,8 +147,8 @@ class UserSkillTest(TestCase):
     def test_add_skill_to_user(self):
         """Test adding skills to a user."""
         user = User.objects.create_user(
-            email='skills@example.com',
-            name='Skill',
+            email=USER_SKILLS_EMAIL,
+            name=USER_SKILLS_NAME,
             surname=TEST_SURNAME,
             password=TEST_PASSWORD
         )
@@ -131,8 +164,8 @@ class UserSkillTest(TestCase):
     def test_remove_skill_from_user(self):
         """Test removing a skill from a user."""
         user = User.objects.create_user(
-            email='remove@example.com',
-            name='Remove',
+            email=USER_REMOVE_EMAIL,
+            name=USER_REMOVE_NAME,
             surname=TEST_SURNAME,
             password=TEST_PASSWORD
         )
@@ -157,19 +190,19 @@ class RegisterViewTest(TestCase):
     def test_register_post_valid(self):
         """Test registration with valid data."""
         response = self.client.post(reverse(URL_REGISTER), {
-            FORM_FIELD_NAME: 'Test',
+            FORM_FIELD_NAME: USER_REGISTER_NAME,
             FORM_FIELD_SURNAME: TEST_SURNAME,
-            FORM_FIELD_EMAIL: 'test@example.com',
+            FORM_FIELD_EMAIL: USER_REGISTER_EMAIL,
             FORM_FIELD_PASSWORD1: TEST_PASSWORD,
             FORM_FIELD_PASSWORD2: TEST_PASSWORD,
         })
         self.assertRedirects(response, reverse(URL_PROJECT_LIST))
-        self.assertTrue(User.objects.filter(email='test@example.com').exists())
+        self.assertTrue(User.objects.filter(email=USER_REGISTER_EMAIL).exists())
 
     def test_register_post_invalid(self):
         """Test registration with invalid data."""
         response = self.client.post(reverse(URL_REGISTER), {
-            FORM_FIELD_NAME: 'Test',
+            FORM_FIELD_NAME: USER_REGISTER_NAME,
             FORM_FIELD_SURNAME: TEST_SURNAME,
             FORM_FIELD_EMAIL: 'invalid-email',
             FORM_FIELD_PASSWORD1: TEST_PASSWORD,
@@ -185,8 +218,8 @@ class LoginViewTest(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            email='login@example.com',
-            name='Login',
+            email=USER_LOGIN_EMAIL,
+            name=USER_LOGIN_NAME,
             surname=TEST_SURNAME,
             password=TEST_PASSWORD
         )
@@ -200,7 +233,7 @@ class LoginViewTest(TestCase):
     def test_login_post_valid(self):
         """Test login with valid credentials."""
         response = self.client.post(reverse(URL_LOGIN), {
-            FORM_FIELD_USERNAME: 'login@example.com',
+            FORM_FIELD_USERNAME: USER_LOGIN_EMAIL,
             FORM_FIELD_PASSWORD: TEST_PASSWORD,
         })
         self.assertRedirects(response, reverse(URL_PROJECT_LIST))
@@ -208,8 +241,8 @@ class LoginViewTest(TestCase):
     def test_login_post_invalid(self):
         """Test login with invalid credentials."""
         response = self.client.post(reverse(URL_LOGIN), {
-            FORM_FIELD_USERNAME: 'login@example.com',
-            FORM_FIELD_PASSWORD: 'wrongpassword',
+            FORM_FIELD_USERNAME: USER_LOGIN_EMAIL,
+            FORM_FIELD_PASSWORD: TEST_WRONG_PASSWORD,
         })
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertTemplateUsed(response, TEMPLATE_LOGIN)
@@ -222,15 +255,15 @@ class ParticipantsViewTest(TestCase):
         self.skill1 = Skill.objects.create(name=SKILL_PYTHON)
         self.skill2 = Skill.objects.create(name=SKILL_JAVASCRIPT)
         self.user1 = User.objects.create_user(
-            email='user1@example.com',
-            name='User',
-            surname='One',
+            email=USER_PARTICIPANTS_1_EMAIL,
+            name=USER_PARTICIPANTS_1_NAME,
+            surname=USER_PARTICIPANTS_1_SURNAME,
             password=TEST_PASSWORD
         )
         self.user2 = User.objects.create_user(
-            email='user2@example.com',
-            name='User',
-            surname='Two',
+            email=USER_PARTICIPANTS_2_EMAIL,
+            name=USER_PARTICIPANTS_2_NAME,
+            surname=USER_PARTICIPANTS_2_SURNAME,
             password=TEST_PASSWORD
         )
         self.user1.skills.add(self.skill1)
@@ -249,4 +282,4 @@ class ParticipantsViewTest(TestCase):
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(len(response.context['participants']), 1)
         participants_list = list(response.context['participants'])
-        self.assertEqual(participants_list[0].email, 'user1@example.com')
+        self.assertEqual(participants_list[0].email, USER_PARTICIPANTS_1_EMAIL)
