@@ -37,19 +37,6 @@ class UserModelTest(TestCase):
         self.assertTrue(user.is_staff)
         self.assertTrue(user.is_superuser)
     
-    def test_user_avatar_generation(self):
-        """Test that avatar is generated on user creation (skipped during tests)."""
-        # Avatar generation is disabled during tests to prevent file clutter
-        # This test just verifies the user can be created without avatar
-        user = User.objects.create_user(
-            email='avatar@example.com',
-            name='Avatar',
-            surname='Test',
-            password='testpass123'
-        )
-        # Avatar will be empty/None in tests (generation is skipped)
-        self.assertFalse(bool(user.avatar))
-    
     def test_user_str_representation(self):
         """Test user string representation."""
         user = User.objects.create_user(

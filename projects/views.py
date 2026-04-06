@@ -14,7 +14,6 @@ def project_list_view(request):
     """List of all projects with pagination."""
     projects = Project.objects.filter(status='open').order_by('-created_at')
     
-    # Pagination
     paginator = Paginator(projects, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -49,7 +48,6 @@ def edit_project_view(request, project_id):
     """Edit project view."""
     project = get_object_or_404(Project, pk=project_id)
     
-    # Check permission
     if request.user != project.owner:
         return redirect('projects:project_details', project_id=project_id)
     
@@ -70,7 +68,6 @@ def complete_project_view(request, project_id):
     """Complete/close project view."""
     project = get_object_or_404(Project, pk=project_id)
     
-    # Check permission - only owner can complete
     if request.user != project.owner:
         return JsonResponse({'status': 'error', 'message': 'Permission denied'}, status=403)
     
@@ -90,13 +87,11 @@ def toggle_participate_view(request, project_id):
     user = request.user
     
     if user in project.participants.all():
-        # Remove participation (but owner can't leave)
         if user == project.owner:
             return JsonResponse({'status': 'error', 'message': 'Owner cannot leave project'}, status=400)
         project.participants.remove(user)
         return JsonResponse({'status': 'ok', 'participant': False})
     else:
-        # Add participation
         project.participants.add(user)
         return JsonResponse({'status': 'ok', 'participant': True})
 
@@ -104,7 +99,6 @@ def toggle_participate_view(request, project_id):
 @login_required
 def favorite_projects_view(request):
     """List of user's favorite projects."""
-    # Get projects where current user is in participants (Variant 2 uses participated_projects)
     projects = request.user.participated_projects.all().order_by('-created_at')
     return render(request, 'projects/favorite_projects.html', {'projects': projects})
 

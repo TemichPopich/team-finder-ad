@@ -59,18 +59,14 @@ def user_details_view(request, user_id):
 
 def participants_view(request):
     """List of all users with filtering by skills (Variant 2)."""
-    # Get all users ordered by creation date
     users = User.objects.all().order_by('-created_at')
     
-    # Get all skills for filter
     all_skills = Skill.objects.all().order_by('name')
     active_skill = request.GET.get('skill')
     
-    # Filter by skill if provided
     if active_skill:
         users = users.filter(skills__name=active_skill)
     
-    # Pagination
     paginator = Paginator(users, 12)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -131,7 +127,6 @@ def skills_autocomplete(request):
 @require_http_methods(["POST"])
 def add_skill(request, user_id):
     """Add skill to user (Variant 2)."""
-    # Check permission
     if request.user.id != user_id:
         return JsonResponse({'error': 'Permission denied'}, status=403)
     
@@ -146,16 +141,13 @@ def add_skill(request, user_id):
     user = get_object_or_404(User, pk=user_id)
     
     if skill_id:
-        # Add existing skill
         skill = get_object_or_404(Skill, pk=skill_id)
         created = False
     elif skill_name:
-        # Get or create skill
         skill, created = Skill.objects.get_or_create(name=skill_name)
     else:
         return JsonResponse({'error': 'skill_id or name required'}, status=400)
     
-    # Add skill to user if not already present
     added = False
     if skill not in user.skills.all():
         user.skills.add(skill)
@@ -173,7 +165,6 @@ def add_skill(request, user_id):
 @require_http_methods(["POST"])
 def remove_skill(request, user_id, skill_id):
     """Remove skill from user (Variant 2)."""
-    # Check permission
     if request.user.id != user_id:
         return JsonResponse({'error': 'Permission denied'}, status=403)
     

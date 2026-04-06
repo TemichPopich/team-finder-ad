@@ -58,7 +58,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     
-    # Variant 2: User skills
     skills = models.ManyToManyField(Skill, related_name='users', blank=True)
     
     objects = UserManager()
@@ -73,8 +72,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f"{self.name} {self.surname}"
     
     def save(self, *args, **kwargs):
-        # Generate avatar if not provided and this is a new user
-        # Skip avatar generation during tests
         is_test = 'test' in sys.argv or 'pytest' in sys.modules
         is_new = self.pk is None
         if is_new and not self.avatar and not is_test:
@@ -88,18 +85,13 @@ class User(AbstractBaseUser, PermissionsMixin):
         text_color = (255, 255, 255)
         
         img = Image.new('RGB', size, color=background_color)
-        draw = ImageDraw.Draw(img)
-        
-        # Get first letter of name
+        draw = ImageDraw.Draw(img)        
+
         initial = self.name[0].upper() if self.name else '?'
         
-        # Try to use a font, fallback to default if not available
-        try:
-            font = ImageFont.truetype("/System/Library/Fonts/Supplemental/Arial.ttf", 100)
-        except:
-            font = ImageFont.load_default()
         
-        # Calculate text position to center it
+        font = ImageFont.load_default()
+        
         bbox = draw.textbbox((0, 0), initial, font=font)
         text_width = bbox[2] - bbox[0]
         text_height = bbox[3] - bbox[1]
@@ -107,30 +99,28 @@ class User(AbstractBaseUser, PermissionsMixin):
         y = (size[1] - text_height) // 2
         
         draw.text((x, y), initial, fill=text_color, font=font)
-        
-        # Save to buffer
+
         buffer = io.BytesIO()
         img.save(buffer, format='PNG')
         buffer.seek(0)
         
-        # Save to avatar field
         filename = f"avatar_{hashlib.md5(self.email.encode()).hexdigest()}.png"
         self.avatar.save(filename, ContentFile(buffer.read()), save=False)
     
     def _get_random_color(self):
         """Get a random pleasant background color."""
         colors = [
-            (65, 105, 225),   # Royal Blue
-            (34, 139, 34),    # Forest Green
-            (220, 20, 60),    # Crimson
-            (255, 140, 0),    # Dark Orange
-            (148, 0, 211),    # Dark Violet
-            (0, 139, 139),    # Dark Cyan
-            (218, 112, 214),  # Orchid
-            (70, 130, 180),   # Steel Blue
-            (50, 205, 50),    # Lime Green
-            (255, 99, 71),    # Tomato
+            (65, 105, 225),   
+            (34, 139, 34),    
+            (220, 20, 60),
+            (255, 140, 0),   
+            (148, 0, 211),    
+            (0, 139, 139),    
+            (218, 112, 214),  
+            (70, 130, 180),   
+            (50, 205, 50),    
+            (255, 99, 71),    
         ]
-        # Use hash of email for consistent color
+
         hash_val = int(hashlib.md5(self.email.encode()).hexdigest(), 16)
         return colors[hash_val % len(colors)]
