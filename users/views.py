@@ -7,22 +7,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
-from django.core.paginator import Paginator
 
 from .models import User, Skill
 from .forms import RegisterForm, LoginForm, ProfileEditForm, CustomPasswordChangeForm
+from team_finder.utils import get_paginated_queryset
 
 # View constants
 USERS_PER_PAGE = 12
 SKILLS_AUTOCOMPLETE_LIMIT = 10
-
-
-def _get_paginated_queryset(queryset, per_page, request):
-    """Helper function for pagination."""
-    paginator = Paginator(queryset, per_page)
-    page_number = request.GET.get('page')
-    return paginator.get_page(page_number)
-
 
 def register_view(request):
     """User registration view."""
@@ -80,7 +72,7 @@ def participants_view(request):
     if active_skill:
         users = users.filter(skills__name=active_skill)
     
-    page_obj = _get_paginated_queryset(users, USERS_PER_PAGE, request)
+    page_obj = get_paginated_queryset(users, USERS_PER_PAGE, request)
     
     context = {
         'participants': page_obj,

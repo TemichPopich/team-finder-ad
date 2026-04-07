@@ -1,13 +1,16 @@
 from django.db import models
 from django.conf import settings
 
+PROJECT_STATUS_OPEN = 'open'
+PROJECT_STATUS_CLOSED = 'closed'
+
 
 class Project(models.Model):
     """Project model for TeamFinder platform."""
     
     STATUS_CHOICES = [
-        ('open', 'Open'),
-        ('closed', 'Closed'),
+        (PROJECT_STATUS_OPEN, 'Open'),
+        (PROJECT_STATUS_CLOSED, 'Closed'),
     ]
     
     name = models.CharField(max_length=200)

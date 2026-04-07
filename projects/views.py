@@ -6,28 +6,20 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.core.paginator import Paginator
 
-from .models import Project
+from .models import Project, PROJECT_STATUS_OPEN, PROJECT_STATUS_CLOSED
 from .forms import ProjectForm
 from users.models import Skill
+from team_finder.utils import get_paginated_queryset
 
 # View constants
 PROJECTS_PER_PAGE = 12
 SKILLS_AUTOCOMPLETE_LIMIT = 10
-PROJECT_STATUS_OPEN = 'open'
-PROJECT_STATUS_CLOSED = 'closed'
-
-
-def _get_paginated_queryset(queryset, per_page, request):
-    """Helper function for pagination."""
-    paginator = Paginator(queryset, per_page)
-    page_number = request.GET.get('page')
-    return paginator.get_page(page_number)
 
 
 def project_list_view(request):
     """List of all projects with pagination."""
     projects = Project.objects.select_related('owner').filter(status=PROJECT_STATUS_OPEN).order_by('-created_at')
-    page_obj = _get_paginated_queryset(projects, PROJECTS_PER_PAGE, request)
+    page_obj = get_paginated_queryset(projects, PROJECTS_PER_PAGE, request)
     
     return render(request, 'projects/project_list.html', {'projects': page_obj})
 
@@ -102,9 +94,8 @@ def toggle_participate_view(request, project_id):
             return JsonResponse({'status': 'error', 'message': 'Owner cannot leave project'}, status=HTTPStatus.BAD_REQUEST)
         project.participants.remove(user)
         return JsonResponse({'status': 'ok', 'participant': False})
-    else:
-        project.participants.add(user)
-        return JsonResponse({'status': 'ok', 'participant': True})
+    project.participants.add(user)
+    return JsonResponse({'status': 'ok', 'participant': True})
 
 
 @login_required
